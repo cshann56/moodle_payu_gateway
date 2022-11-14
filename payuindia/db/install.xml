@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="payment/gateway/payuindia/db" VERSION="20221110" COMMENT="XMLDB file for Moodle payment/gateway/payuindia"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="paygw_payuindia" COMMENT="This is the first table in which an entry should be made for any transaction. Before going to the submitinfo table, first create an entry for this table and get the record.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="datetime" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Timestamp for creation of record"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="The user id in the system"/>
+        <FIELD NAME="txnid" TYPE="char" LENGTH="25" NOTNULL="false" SEQUENCE="false" COMMENT="This parameter would contain the transaction ID value posted by the merchant during the transaction request."/>
+        <FIELD NAME="submitinfoid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="This links to the id field in table &quot;paygw_payuindia_submitinfo&quot;. This field is filled out along with paymentid after a successful payment has been received for a registered course."/>
+        <FIELD NAME="paymentid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="This links to the field paymentid in table &quot;payments&quot;. This field is filled out along with submitinfo after a successful payment has been received for a registered course."/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="paygw_payuindia_submitinfo" COMMENT="Table records initial transactions made by customers/students.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="datetime" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Transaction date/time"/>
+        <FIELD NAME="component" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Moodle value for retrieving account."/>
+        <FIELD NAME="paymentarea" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Moodle internal for retrieving payment account."/>
+        <FIELD NAME="itemid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="ID of the item (whatever that may be)."/>
+        <FIELD NAME="payukey" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="Corresponds to &quot;key&quot; in PayU data dictionary."/>
+        <FIELD NAME="txnid" TYPE="char" LENGTH="25" NOTNULL="true" SEQUENCE="false" COMMENT="This parameter would contain the transaction ID value posted by the merchant during the transaction request."/>
+        <FIELD NAME="productinfo" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="Description of the course or product."/>
+        <FIELD NAME="amount" TYPE="number" LENGTH="10" NOTNULL="true" SEQUENCE="false" DECIMALS="2" COMMENT="Amount for the transaction."/>
+        <FIELD NAME="additional_charges" TYPE="number" LENGTH="10" NOTNULL="false" SEQUENCE="false" DECIMALS="2" COMMENT="Any additional charges."/>
+        <FIELD NAME="udf" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="User-defined field (see PayU schema documentation). This will be a text field with values delimited by pipe characters."/>
+        <FIELD NAME="firstname" TYPE="char" LENGTH="60" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="email" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="phone" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="lastname" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="address1" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="address2" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="city" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="state" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="country" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="zipcode" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="hash" TYPE="char" LENGTH="128" NOTNULL="true" SEQUENCE="false" COMMENT="The hash generated for this submitted info."/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="paygw_payuindia_response" COMMENT="Response fields from remote PayU system.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="datetime" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Timestamp for the event"/>
+        <FIELD NAME="source" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="redirect" SEQUENCE="false" COMMENT="Either &quot;redirect&quot; or &quot;webhook&quot; without quotes. Redirect is when the Payu site redirects browser back to Moodle site, and webhook is when the PayU server does a push request."/>
+        <FIELD NAME="remoteaddr" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false" COMMENT="IP address of remote source."/>
+        <FIELD NAME="mihpayid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="It is a unique reference number created for each transaction at PayU’s end"/>
+        <FIELD NAME="payumode" TYPE="char" LENGTH="5" NOTNULL="false" SEQUENCE="false" COMMENT="This parameter describes the payment category by which the transaction was completed/attempted by the customer. Corresponds to &quot;mode&quot; in PayU data dictionary."/>
+        <FIELD NAME="status" TYPE="char" LENGTH="7" NOTNULL="true" SEQUENCE="false" COMMENT="This parameter gives the status of the transaction."/>
+        <FIELD NAME="payukey" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="This parameter would contain the merchant key for the merchant’s account at PayU. Corresponds to key in PayU data dictionary."/>
+        <FIELD NAME="txnid" TYPE="char" LENGTH="25" NOTNULL="true" SEQUENCE="false" COMMENT="This parameter would contain the transaction ID value posted by the merchant during the transaction request."/>
+        <FIELD NAME="productinfo" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="This parameter would contain the same value of productinfo which was sent in the transaction request from merchant’s end to PayU."/>
+        <FIELD NAME="amount" TYPE="number" LENGTH="10" NOTNULL="true" SEQUENCE="false" DECIMALS="2" COMMENT="This parameter would contain the original amount which was sent in the transaction request by the merchant."/>
+        <FIELD NAME="additional_charges" TYPE="number" LENGTH="10" NOTNULL="false" SEQUENCE="false" DECIMALS="2" COMMENT="Any additional charges."/>
+        <FIELD NAME="discount" TYPE="number" LENGTH="10" NOTNULL="false" SEQUENCE="false" DECIMALS="2" COMMENT="This parameter would contain the discount given to user - based on the type of offer applied by the merchant."/>
+        <FIELD NAME="net_amount_debit" TYPE="number" LENGTH="10" NOTNULL="false" SEQUENCE="false" DECIMALS="2" COMMENT="No info about this in PayU data dictionary."/>
+        <FIELD NAME="addedon" TYPE="char" LENGTH="19" NOTNULL="true" SEQUENCE="false" COMMENT="The date-timestamp on which this record was added in the PayU system. This is kept as a character field so that the received value is preserved as it was reported."/>
+        <FIELD NAME="firstname" TYPE="char" LENGTH="60" NOTNULL="true" SEQUENCE="false" COMMENT="This parameter would contain the same value of firstname which was sent in the transaction request from merchant’s end to PayU."/>
+        <FIELD NAME="email" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="phone" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="lastname" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="This parameter would contain the same value of lastname which was sent in the transaction request from merchant’s end to PayU"/>
+        <FIELD NAME="address1" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="Self-Explanatory. This parameter is mandatory for Cardless EMI option. This will be used for billing address."/>
+        <FIELD NAME="address2" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="Self-explanatory."/>
+        <FIELD NAME="city" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false" COMMENT="This parameter is mandatory for Cardless EMI option. This will be used for billing address"/>
+        <FIELD NAME="state" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false" COMMENT="This parameter is mandatory for Cardless EMI option. This will be used for billing address."/>
+        <FIELD NAME="country" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false" COMMENT="This parameter is mandatory for Cardless EMI option. This will be used for billing address."/>
+        <FIELD NAME="zipcode" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="This parameter is mandatory for Cardless EMI option. This will be used for billing address."/>
+        <FIELD NAME="udf" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="User-defined field (see PayU schema documentation). This will be a text field with values delimited by pipe characters."/>
+        <FIELD NAME="field" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Will hold values for field0 - field9 (see PayU schema documentation). This will be a text field with values delimited by pipe characters."/>
+        <FIELD NAME="hash" TYPE="char" LENGTH="128" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="error" TYPE="char" LENGTH="25" NOTNULL="false" SEQUENCE="false" COMMENT="For the failed transactions, this parameter provides the reason of failure."/>
+        <FIELD NAME="error_message" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="For the failed transactions, this parameter provides the reason of failure."/>
+        <FIELD NAME="bankcode" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="This parameter would contain the code indicating the payment option used for the transaction."/>
+        <FIELD NAME="paymentsource" TYPE="char" LENGTH="25" NOTNULL="false" SEQUENCE="false" COMMENT="Payment source."/>
+        <FIELD NAME="pg_type" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="This parameter gives information on the payment gateway used for the transaction."/>
+        <FIELD NAME="bank_ref_num" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="For each successful transaction – this parameter would contain the bank reference number generated by the bank."/>
+        <FIELD NAME="unmappedstatus" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="This parameter contains the status of a transaction as per the internal database of PayU"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="paygw_payuindia_verify" COMMENT="Verify data obtained through the PayU Verify API captured here.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="datetime" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Time the request was retrieved."/>
+        <FIELD NAME="responseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Links to the id field in the paygw_payuindia_response table."/>
+        <FIELD NAME="txnid" TYPE="char" LENGTH="25" NOTNULL="true" SEQUENCE="false" COMMENT="Saving txnid here also to make it convenient for retrieval."/>
+        <FIELD NAME="internal_result_code" TYPE="char" LENGTH="25" NOTNULL="true" DEFAULT="get remote data FAIL" SEQUENCE="false" COMMENT="A variable field about the success of obtaining the remote data. A successful retrieval should leave message: get remote data OK."/>
+        <FIELD NAME="verifydata" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Data obtained from PayU remote system for verifying data."/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="response-verify-key" TYPE="foreign" FIELDS="responseid" REFTABLE="paygw_payuindia_response" REFFIELDS="id" COMMENT="Links the responseid in the verify table to the id in the response table."/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="paygw_payuindia_countries" COMMENT="Country dropdown field in the payment form.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="countryid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Actual country ID field used to link to states/regions. We do not expect countries to be added outside of the plugin setup."/>
+        <FIELD NAME="name" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="iso3" TYPE="char" LENGTH="3" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="currency" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="currency_name" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="currency_symbol" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="country_key" TYPE="unique" FIELDS="countryid"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="paygw_payuindia_states" COMMENT="States table linked to countries table.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="stateid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="countryid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Linked to countryid in paygw_payuindia_countries table."/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="state_code" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="state_key" TYPE="unique" FIELDS="stateid"/>
+        <KEY NAME="country_state_key" TYPE="foreign" FIELDS="countryid" REFTABLE="paygw_payuindia_countries" REFFIELDS="countryid"/>
+      </KEYS>
+    </TABLE>
+  </TABLES>
+</XMLDB>
