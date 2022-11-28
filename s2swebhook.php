@@ -29,18 +29,28 @@ use paygw_payuindia\payuhelper;
 
 require_once('../../../config.php');
 
-$gwcfg = payuhelper::get_gatewayconfig();
-$allowedips = $gwcfg->webhookaddress;
-
-# Check remote_addr against allowable webhook address
-$raddr = payuhelper::get_remote_ipaddr(); 
-
 $authorized = false;
-for ($i = 0; $i < count($allowedips); $i++) {
-    if ($raddr == $allowedips[$i]) {
-        $authorized = true;
-        break;
+
+try {
+    $gwcfg = payuhelper::get_gatewayconfig();
+
+    if ($gwcfg != null) {
+        $allowedips = $gwcfg->webhookaddress;
+
+        # Check remote_addr against allowable webhook address
+        $raddr = payuhelper::get_remote_ipaddr(); 
+
+        for ($i = 0; $i < count($allowedips); $i++) {
+            if ($raddr == $allowedips[$i]) {
+                $authorized = true;
+                break;
+            }
+        }
     }
+} catch (Exception $e) {
+    // We don't care what the exception is right now, except
+    // we know that the remote server did not send the correct information.
+    $authorized = false;
 }
 
 if (! $authorized) {

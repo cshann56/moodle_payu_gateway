@@ -499,12 +499,16 @@ HTML;
         // The original data submitted to the remote PayU system.
         $submitinfo = (array) $DB->get_record('paygw_payuindia_submitinfo', 
             ['txnid' => $txnid]);
-
-        // Get the gateway config.
-        $gwcfg = new gatewayconfig(
-                $submitinfo['component'],
-                $submitinfo['paymentarea'],
-                $submitinfo['itemid']);
+        
+        if ($submitinfo['component'] != null) {
+            // Get the gateway config.
+            $gwcfg = new gatewayconfig(
+                    $submitinfo['component'],
+                    $submitinfo['paymentarea'],
+                    $submitinfo['itemid']);
+        } else {
+            $gwcfg = null;
+        }
 
         return $gwcfg;
     }
