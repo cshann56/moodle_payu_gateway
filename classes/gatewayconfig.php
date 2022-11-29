@@ -56,7 +56,8 @@ class gatewayconfig {
             $this->remotekey    = $this->config->remotekey;
             $this->remotesalt   = $this->config->remotesalt;
             $whaddr = $this->config->testwebhook;
-            $webaddr_arr = preg_split("/\s*,\s*/", $whaddr);
+            $whaddr = $whaddr != null ? trim($whaddr) : "";
+            $webaddr_arr = preg_split("/[ ,]+/", $whaddr);
             $this->webhookaddress = $webaddr_arr; 
         } else {
             $this->remotekey    = $this->config->remotekeylive;
