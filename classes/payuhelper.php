@@ -305,12 +305,37 @@ HTML;
 
     /**
      * Returns true false only.
-     * False means response was recorded. True means it was recorded. Null means txnid not found.
-     * @param $txnid    Optional transaction ID. Default is null.
-     * @param $success  Optional flag indicating whether registration with class was successful.
-     *                  Default is false.
+     * False means response was not recorded. True means it was recorded. Null means txnid not found.
+     * @param $mihpayid Optional mihpayid, the unique ID for each transaction. Default is null.
      */
-    public static function is_response_recorded($txnid = null, $success = false) {
+    public static function is_response_recorded($mihpayid = null) {
+
+        global $DB;
+
+        $retval = false;
+
+        if ($mihpayid == null) {
+            $mihpayid = optional_param('mihpayid', null, PARAM_RAW);
+        }
+
+        // Make sure this is ordered ascending by the id field.
+        if ($mihpayid != null) {
+
+            $rec = $DB->get_record('paygw_payuindia_response', ['mihpayid' => $mihpayid]);
+
+            if ($rec != null) {
+                $retval = true;
+            }
+        }
+
+        return $retval;
+    }
+
+    /**
+     * Takes a transaction id (txnid) and determines whether the
+     * user's enrollment was successful.
+     */
+    public static function is_user_enrolled($txnid = null) {
 
         global $DB;
 
@@ -323,53 +348,12 @@ HTML;
         // Make sure this is ordered ascending by the id field.
         if ($txnid != null) {
 
-            if ($success == false) {
+            // There can only be one record for any given txnid
+            $rec = $DB->get_record('paygw_payuindia', ['txnid' => $txnid]);
 
-                $rec = $DB->get_records('paygw_payuindia_response', ['txnid' => $txnid]);
-
-                if (count($rec) > 0) {
-                    $retval = true;
-                }
-            } else {
-
-                // Get the id for the max timestamp for txnid.
-                $sql = "select max(datetime) as maxtime from {paygw_payuindia_response} where txnid = ?";
-                $rec = $DB->get_record_sql($sql, [$txnid]);
-
-                $rec2 = $DB->get_record_select(
-                    'paygw_payuindia_response',
-                    'datetime = ? AND txnid = ?',
-                    [$rec->maxtime, $txnid]
-                );
-
-                // If the response has a success timestamp, then return true.
-                // Otherwise, return false.
-                if ($rec2->error == 'E000') {
-
-                    // One more additional check, to see if an error
-                    // was recorded in any of our compare of amount, hash, or other errors.
-                    $udf = $rec2->udf;
-                    if ($udf != null) {
-                        $udf_fields <- explode("|", $udf);
-                        $internal_err_code = $udf_fields[count($udf_fields) - 2]; // Get second to last code.
-
-                        if ($internal_err_code == "") {
-                            $retval = true;
-                        } else {
-                            $retval = false;
-                        }
-                    } else {
-                        $retval = true;
-                    }
-
-                } else {
-                    $retval = false;
-                }
+            if ($rec->paymentid != null) {
+                $retval = true;
             }
-
-        } else {
-
-            $retval = null;
         }
 
         return $retval;

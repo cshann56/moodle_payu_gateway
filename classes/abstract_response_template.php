@@ -55,6 +55,12 @@ abstract class abstract_response_template {
         if (! $continue_process) {
             return;
         }
+        
+        $continue_process = $this->is_already_enrolled();
+
+        if (! $continue_process) {
+            return;
+        }
 
         $continue_process = $this->compare_hashes();
         if (! $continue_process) {
@@ -116,6 +122,16 @@ abstract class abstract_response_template {
     // Function will be passed an exception object, if any, or null.
     abstract protected function record_response_action($excep = null): bool;
 
+    // Check to see if the user with the specified txnid has been successfully
+    // enrolled in the course.
+    protected function is_already_enrolled() {
+        $is_enrolled = payuhelper::is_user_enrolled();
+
+        return $this->is_already_enrolled_action($is_enrolled);
+    }
+
+    // Says what to do if the user is already enrolled.
+    abstract protected function is_already_enrolled_action($is_enrolled): bool;
 
     protected function compare_hashes() {
         global $DB;

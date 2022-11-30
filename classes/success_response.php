@@ -59,6 +59,15 @@ class success_response extends abstract_response_template {
 
     }
 
+    protected function is_already_enrolled_action($is_enrolled): bool {
+
+        if ($is_enrolled) {
+            return false;
+        }
+
+        return true;
+    }
+
     protected function compare_hashes_action(bool $hashes_match): bool {
 
         if (! $hashes_match) {

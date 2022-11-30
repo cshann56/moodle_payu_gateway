@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="payment/gateway/payuindia/db" VERSION="20221110" COMMENT="XMLDB file for Moodle payment/gateway/payuindia"
+<XMLDB PATH="payment/gateway/payuindia/db" VERSION="20221130" COMMENT="XMLDB file for Moodle payment/gateway/payuindia"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../../lib/xmldb/xmldb.xsd"
 >
@@ -87,6 +87,9 @@
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
+      <INDEXES>
+        <INDEX NAME="mihpayid_idx" UNIQUE="true" FIELDS="mihpayid" COMMENT="An index on the mihpayid field"/>
+      </INDEXES>
     </TABLE>
     <TABLE NAME="paygw_payuindia_verify" COMMENT="Verify data obtained through the PayU Verify API captured here.">
       <FIELDS>

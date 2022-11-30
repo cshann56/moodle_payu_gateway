@@ -58,6 +58,20 @@ function xmldb_paygw_payuindia_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2022100402, 'paygw', 'payuindia');
     }
 
+    if ($oldversion < 2022100403) {
+
+        // Define index mihpayid_idx (unique) to be added to paygw_payuindia_response.
+        $table = new xmldb_table('paygw_payuindia_response');
+        $index = new xmldb_index('mihpayid_idx', XMLDB_INDEX_UNIQUE, ['mihpayid']);
+
+        // Conditionally launch add index mihpayid_idx.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Payuindia savepoint reached.
+        upgrade_plugin_savepoint(true, 2022100403, 'paygw', 'payuindia');
+    }
 
     // For further information please read {@link https://docs.moodle.org/dev/Upgrade_API}.
     //

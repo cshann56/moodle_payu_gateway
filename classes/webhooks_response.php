@@ -41,8 +41,8 @@ class webhooks_response extends abstract_response_template {
 
         $this->remotesource = 'webhook'; // Sets the type of response received.
 
-        $txnid = required_param('txnid', PARAM_RAW);
-        $isrecorded = payuhelper::is_response_recorded($txnid, true);
+        $mihpayid = required_param('mihpayid', PARAM_RAW);
+        $isrecorded = payuhelper::is_response_recorded($mihpayid);
 
         if ($isrecorded) {
             $this->failurecode = '004';
@@ -60,6 +60,15 @@ class webhooks_response extends abstract_response_template {
         return true; // Continues template pattern.
     } 
     
+    protected function is_already_enrolled_action($is_enrolled): bool {
+
+        if ($is_enrolled) {
+            return false;
+        }
+
+        return true;
+    }
+
     protected function record_response_action($excep = null): bool {
 
         if ($excep) {

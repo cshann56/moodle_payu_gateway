@@ -40,7 +40,7 @@ $PAGE->set_url(paygw_payuindia\LOCAL_FAILURE_URL);
 require_login();
 
 $failurecode = optional_param('failurecode', null, PARAM_RAW);
-// echo "<pre>"; var_dump($failurecode, $_REQUEST); echo "</pre>"; exit();
+
 if ($failurecode == null) {
     $fail_resp = new failure_response();
  
@@ -57,23 +57,19 @@ if ($failurecode == null) {
 
     // Check to see if response is already recorded (i.e. user pushed refresh button).
     $isrecorded = payuhelper::is_response_recorded();
+    $txnid = optional_param('txnid', null, PARAM_RAW);
 
-    if ($isrecorded == null) {
+    if ($isrecorded) {
+        // User pressed refresh, send to error page.
+        redirect(paygw_payuindia\LOCAL_FAILURE_URL . '?failurecode=004&response_txnid='.$txnid);     
+    }
+
+    if ($txnid == null) {
 
         // There isn't even a transaction ID, so we don't know what
         // to do with this.
         redirect(paygw_payuindia\LOCAL_FAILURE_URL . '?failurecode=003');     
     }
-
-    if ($isrecorded) {
-
-        $txnid = optional_param('txnid', null, PARAM_RAW);
-
-        // User pressed refresh, send to error page.
-        redirect(paygw_payuindia\LOCAL_FAILURE_URL . '?failurecode=004&response_txnid='.$txnid);     
-    }
-
-    $txnid = required_param('response_txnid', PARAM_RAW);
 }
 
 $PAGE->set_pagelayout('standard');

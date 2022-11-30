@@ -26,6 +26,6 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->component  = 'paygw_payuindia';
 $plugin->release    = '1.0.0';
-$plugin->version    = 2022100402;
+$plugin->version    = 2022100403;
 $plugin->requires   = 2021051700;
 $plugin->maturity   = MATURITY_ALPHA;
