@@ -41,6 +41,7 @@ abstract class abstract_response_template {
     public $failurecode; // Set if a failure happens.
     public $remotesource; // tells whether it is redirecet (null) or webhook.
     public $excep; // Record an exception at the final step, if any. Null otherwise.
+    public $webhook_recorded = false; // Whether a webhook query has already been recorded.
 
     // Main template function.
     public function process_response() {
@@ -86,10 +87,15 @@ abstract class abstract_response_template {
         // https://articlebin.michaelmilette.com/sending-custom-emails-in-moodle-using-the-email_to_user-function/
     }
 
-    // Check if response is already received.
+    // Check if response is already received. A non-webhook pre-existing record
+    // Will also set the failure code to 004.
     protected function is_response_received() {
+        $webhook_recorded = payuhelper::is_recorded_response_from_webhook();
         $isrecorded = payuhelper::is_response_recorded();
-        if ($isrecorded) {
+
+        if ($isrecorded && ! $webhook_recorded) {
+            // We don't want to record this as an error that the user resubmitted a request
+            // or pressed the refresh/F5 button if the recording is from a webhook.
             $this->failurecode = '004';
         }
 

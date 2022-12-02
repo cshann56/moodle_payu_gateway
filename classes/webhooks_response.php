@@ -71,14 +71,26 @@ class webhooks_response extends abstract_response_template {
 
     protected function record_response_action($excep = null): bool {
 
+        $retval = false;
+
         if ($excep) {
             // An exception was thrown.
-            throw $excep;
-            return false;
+            // TODO: Handle a thrown exception in some other way.
+            $this->excep = $excep;
+        } else {
+
+            // We have to check whether the transaction was a success or failure.
+            // If a success, then we allow the transaction to continue. Otherwise,
+            // it's a failure, and recording the transaction and sending any notification
+            // is sufficient.
+            $paystatus = payuhelper::payment_status();
+
+            if ($paystatus == 'success') {
+                $retval = true; // Other values could be 'failure' and 'pending'
+            }
         }
 
-        return true;
-
+        return $retval;
     }
 
     protected function compare_hashes_action(bool $hashes_match): bool {
@@ -94,29 +106,36 @@ class webhooks_response extends abstract_response_template {
 
     protected function compare_charges_action(bool $unequal): bool {
 
+        $retval = true;
+
         if ($unequal) {
             $this->update_response_record('002');
-            return false;
+            $retval = false;
         }
 
-        return true;
+        return $retval;
     }
 
     protected function verify_response_action(bool $response_verified): bool {
 
+        $retval = true;
+
         if (! $response_verified) {
             $this->update_response_record('003');
-            return false;
+            $retval = false;
         }
 
-        return true;
+        return $retval;
     }
 
 
     protected function deliver_order_action($excep = null): bool {
 
+        $retval = true;
+
         if ($excep != null) {
             $this->excep = $excep;
+            $retval = false;
         }
 
         return true;

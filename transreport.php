@@ -40,6 +40,7 @@ $PAGE->set_url(paygw_payuindia\LOCAL_FAILURE_URL);
 require_login();
 
 $failurecode = optional_param('failurecode', null, PARAM_RAW);
+$txnid = optional_param('txnid', null, PARAM_RAW);
 
 if ($failurecode == null) {
     $fail_resp = new failure_response();
@@ -51,15 +52,18 @@ if ($failurecode == null) {
         $failurecode = $fail_resp->failurecode;
     }
 
-    $txnid = $fail_resp->fetched_params['txnid'];
-
 } else {
 
     // Check to see if response is already recorded (i.e. user pushed refresh button).
-    $isrecorded = payuhelper::is_response_recorded();
-    $txnid = optional_param('txnid', null, PARAM_RAW);
+    $webhook_recorded = payuhelper::is_recorded_response_from_webhook();
 
-    if ($isrecorded) {
+    if ($webhook_recorded == null) {
+        $webhook_recorded = false;
+    }
+
+    $isrecorded = payuhelper::is_response_recorded();
+
+    if ($isrecorded && ! $webhook_recorded) {
         // User pressed refresh, send to error page.
         redirect(paygw_payuindia\LOCAL_FAILURE_URL . '?failurecode=004&response_txnid='.$txnid);     
     }
@@ -99,8 +103,8 @@ HTML;
 
     // An error from the PayU side.
     // PayU has sent us a bunch of information not yet recorded.
-    $fp_error = $fail_resp->fetched_params["error"];
-    $fp_error_msg = $fail_resp->fetched_params["error_message"];
+    $fp_error = required_param("error", PARAM_RAW);
+    $fp_error_msg = required_param("error_Message", PARAM_RAW);
 
     echo $OUTPUT->header();
     echo <<<HTML

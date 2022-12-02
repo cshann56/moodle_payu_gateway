@@ -305,7 +305,7 @@ HTML;
 
     /**
      * Returns true false only.
-     * False means response was not recorded. True means it was recorded. Null means txnid not found.
+     * False means response was not recorded. True means it was recorded.
      * @param $mihpayid Optional mihpayid, the unique ID for each transaction. Default is null.
      */
     public static function is_response_recorded($mihpayid = null) {
@@ -331,6 +331,69 @@ HTML;
         return $retval;
     }
 
+    /**
+     * Returns redirect or webhook type of response for a given mihpayid.
+     * A response of "webhook" means the already recorded response was a webhook. A
+     * A response of "redirect" means the response was already recorded as a result of a redirect.
+     * A null response means that the mihpayid could not be found.
+     * The web query submission form data is not queried, only the database is queried.
+     * @param $mihpayid Optional mihpayid, the unique ID for each transaction. Default is null.
+     */
+    public static function is_recorded_response_from_webhook($mihpayid = null) {
+
+        global $DB;
+
+        $retval = null;
+
+        if ($mihpayid == null) {
+            $mihpayid = optional_param('mihpayid', null, PARAM_RAW);
+        }
+
+        // Make sure this is ordered ascending by the id field.
+        if ($mihpayid != null) {
+
+            $rec = $DB->get_record('paygw_payuindia_response', ['mihpayid' => $mihpayid]);
+
+            if ($rec != null) {
+
+                if ($rec->source == 'webhook') {
+                    $retval = true;
+                } else {
+                    $retval = false;
+                }
+            }
+        }
+
+        return $retval;
+    }
+
+    /**
+     * Returns success, failure, pending, or null if mihpayid not found.
+     * If no $mihpayid is given as a parameter (null), then the input from the
+     * HTTPD query or submit information is read fromt the status parameter and returned.
+     * @param $mihpayid Optional mihpayid, the unique ID for each transaction. Default is null.
+     */
+    public static function payment_status($mihpayid = null) {
+
+        global $DB;
+
+        $retval = null;
+
+        if ($mihpayid == null) {
+            $status = optional_param('status', null, PARAM_RAW);
+            $retval = $status;
+        } else {
+
+            $rec = $DB->get_record('paygw_payuindia_response', ['mihpayid' => $mihpayid]);
+            
+            if ($rec != null) {
+                $retval = $rec->status;
+            }
+        }
+
+        return $retval;
+    }
+    
     /**
      * Takes a transaction id (txnid) and determines whether the
      * user's enrollment was successful.

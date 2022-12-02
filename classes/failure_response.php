@@ -38,18 +38,24 @@ class failure_response extends abstract_response_template {
 
     protected function is_response_received_action($isrecorded): bool {
 
+        // This does not affect any code in the module, except to
+        // set a flat that a webhook response was already recorded.
+        $this->webhook_recorded = payuhelper::is_recorded_response_from_webhook();
+
+        $retval = true;
+
         if ($isrecorded) {
-            return false;
+            $retval = false;
         }
 
-        return true;
+        return $retval; 
     } 
     
     protected function record_response_action($excep = null): bool {
 
         if ($excep) {
             // An exception was thrown.
-            throw $excep;
+            $this->excep = $excep;
             return false;
         }
 
@@ -83,7 +89,4 @@ class failure_response extends abstract_response_template {
     protected function deliver_order_action($excep = null): bool {
         return false;
     }
-
-
-
 }
