@@ -44,3 +44,5 @@ $string['response_error_code_001'] = 'Remote and local hashes do not match.';
 $string['response_error_code_002'] = 'Submitted amount and reported amount do not match.';
 $string['response_error_code_003'] = 'Cannot verify transaction at this time.';
 $string['response_error_code_004'] = 'Response from payment site already received.';
+
+$string['eventuserenrolmentcreated'] = 'User enrolled in course through PayU gateway payment.';
