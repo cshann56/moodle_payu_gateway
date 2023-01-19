@@ -71,6 +71,9 @@ export const init = () => {
         return retval;
     }
 
+    /**
+     * Does some stuff.
+     */
     function sendFormDataToRemote() {
         // Disable the visible input fields.
         jQuery("#payuworkform input[type='text']").prop('disabled', true);
@@ -161,6 +164,9 @@ export const init = () => {
         });
     }
 
+    /**
+     * Cancels a transaction.
+     */
     function cancelTransaction() {
 
         var courseId = jQuery("#payuworkform input[name='courseid']").val();
@@ -184,15 +190,18 @@ export const init = () => {
         if (! validationResult) {
             return;
         } else { // Validation passed, so popup a modal form asking if user wants to continue
+                var bsDiv = document.getElementById('billingSummary');
+                var body = '<div align="center">' + bsDiv.innerHTML + '</div>' +
+                        '<hr/><p>Pressing OK will redirect your browser to '+
+                        'another website that will process your '+
+                        'payment. After the transaction is complete, '+
+                        'your browser will be redirected back to '+
+                        'this website. Do you want to continue?</p>';
 
             ModalFactory.create({
                 type: ModalFactory.types.SAVE_CANCEL,
                 title: 'Submit Payment',
-                body: 'Pressing OK will redirect your browser to '+
-                      'another website that will process your '+
-                      'payment. After the transaction is complete, '+
-                      'your browser will be redirected back to '+
-                      'this website. Do you want to continue?'
+                body: body
                 })
                 .then(function(modal) {
                     modal.setSaveButtonText('OK');

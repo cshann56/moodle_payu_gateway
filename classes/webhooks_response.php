@@ -74,9 +74,8 @@ class webhooks_response extends abstract_response_template {
         $retval = false;
 
         if ($excep) {
-            // An exception was thrown.
-            // TODO: Handle a thrown exception in some other way.
             $this->excep = $excep;
+            log($excep);
         } else {
 
             // We have to check whether the transaction was a success or failure.

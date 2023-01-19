@@ -139,7 +139,13 @@ class success_response extends abstract_response_template {
 
         global $DB;
 
-        //TODO: write handler in case of an exception, where $excep != null.
+        $redirect_msg = 'Payment was approved.';
+
+        if ($excep != null) {
+            // Something went wrong.
+            log($excep);
+            $redirect_msg = 'Something went wrong with delivering your order.';
+        }
 
         if ($this->submitinfo == null) {
             // This is necessary because if a webhook response has already been
@@ -153,14 +159,10 @@ class success_response extends abstract_response_template {
                 ['txnid' => $txnid]);
         }
 
-
         $url = helper::get_success_url(
             $this->submitinfo['component'],
             $this->submitinfo['paymentarea'],
             $this->submitinfo['itemid']);
         redirect($url, 'Payment was approved.', 0, 'success');
     }
-
-
-
 }

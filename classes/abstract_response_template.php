@@ -82,9 +82,6 @@ abstract class abstract_response_template {
         if (! $continue_process) {
             return;
         }
-
-        // TODO: add a send mail step here.
-        // https://articlebin.michaelmilette.com/sending-custom-emails-in-moodle-using-the-email_to_user-function/
     }
 
     // Check if response is already received. A non-webhook pre-existing record

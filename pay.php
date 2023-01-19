@@ -63,7 +63,9 @@ $surcharge = helper::get_gateway_surcharge('payuindia');
 
 $amount    = $payable->get_amount();
 
-$coursenode = $PAGE->navigation->find($PAGE->course->id, navigation_node::TYPE_COURSE);
+// Also get course ID details for display to the user.
+
+$course = $DB->get_record('course', ['id' => $courseid]);
 
 // Create entry in database. We generate transaction id (txnid) from this database transaction.
 
@@ -92,7 +94,10 @@ $fields = [
 /* Surcharge is a percentage in the moodle system, so divide surcharge by 100 and
    multiply by charge and add it to the field.*/ 
 if ($surcharge > 0) {
-    $fields['additional_charges'] = round($amount * $surcharge / 100, 2);
+    $additional_charges = round($amount * $surcharge / 100, 2);
+    $fields['additional_charges'] = $additional_charges;
+} else {
+    $additional_charges = 0;
 }
 
 
@@ -110,14 +115,39 @@ $adminfields["remote"] = 1;
 // Creates the form for remote submission. All fields are hidden input fields.
 $payform2 = new paymentform($fields, $adminfields);
 
+
+$currency = $payable->get_currency();
+$cost = helper::get_cost_as_string($amount, $currency, $surcharge);
+
+function formatdt($value) {
+    $dt = new DateTime();
+    $dt->setTimestamp($value);
+    $dt->setTimezone(\core_date::get_user_timezone_object());
+    $value = date_format($dt, 'M jS, Y');
+    return $value;
+}
+
+$sdate = formatdt($course->startdate);
+$edate = formatdt($course->enddate);
+
+$billingSummary = '<div id="billingSummary" style="visibility: hidden; position: absolute;">
+<table cellpadding="5" cellspacing="5" border=1>
+<tr><td>Course ID:</td><td>' . $course->idnumber . '</td></tr>
+<tr><td>Course Name:</td><td>' . $course->fullname . '</td></tr>
+<tr><td>Start Date:</td><td>' . $sdate . '</td></tr>
+<tr><td>End Date:</td><td>' . $edate . '</td></tr>
+<tr><td>Amount:</td><td style="text-align: right;">' . sprintf("%.2f", $amount) . '</td></tr>';
+
+if ($surcharge) {
+    $billingSummary .= '<tr><td>' . $surcharge . 
+    '% surchage:</td><td style="text-align: right;">' . sprintf("%.2f", $additional_charges) . '</td></tr>';
+}
+
+$billingSummary .= '<tr><td><b>Total:</b></td><td style="text-align: right;"><b>' . $cost .
+    '</b></td></tr></table></div>';
+
 echo $OUTPUT->header();
-
-// TODO: Display list of charges and items being charged..
-// TODO: Put destination for cancel button.
-// TODO: Create dropdown fields for Country and State/Region.
-//       This will involve a new AJAX webservice for getting state
-//       list based on country.
-
+echo $billingSummary;
 $payform->display();
 $payform2->display();
 

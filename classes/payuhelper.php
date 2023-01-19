@@ -117,8 +117,11 @@ HTML;
             $payusalt;
 
 
-        if ($params['additional_charges'] != null) {
-            $payhash_str = $payhash_str . '|'. $params['additional_charges'];
+        $additional_charges = isset($params['additional_charges']) ?
+            $params['additional_charges'] : '';
+
+        if (!empty($additional_charges)) {
+            $payhash_str = $payhash_str . '|'. $additional_charges;
         }
 
         $payment_hash = strtolower(hash('sha512', $payhash_str));
@@ -159,8 +162,11 @@ HTML;
             $txnid . '|' . 
             $payukey; 
 
-        if ($params['additional_charges'] != null) {
-            $payhash_str = $params['additional_charges'] . '|'. $payhash_str;
+        $additional_charges = isset($params['additional_charges']) ?
+            $params['additional_charges'] : '';
+
+        if (!empty($additional_charges)) {
+            $payhash_str = $additional_charges . '|'. $payhash_str;
         }
 
         $payment_hash = strtolower(hash('sha512', $payhash_str));
@@ -240,7 +246,7 @@ HTML;
         }
 
         if ($resp == 'false') {
-            throw new moodle_exception(123, null, null, "cURL did not return anything.");
+            throw new \moodle_exception(123, null, null, "cURL did not return anything.");
         }
 
         // Save the json response to the database.
@@ -292,7 +298,6 @@ HTML;
 
         $payable = helper::get_payable($component, $paymentarea, $itemid);
 
-        // TODO: Get more info on function core_payment\helper::get_rounded_cost().
         $cost = helper::get_rounded_cost($payable->get_amount(), $payable->get_currency(),
             $additional_charges != null ? $additional_charges : 0.0);
         $paymentid = helper::save_payment($payable->get_account_id(), $component, $paymentarea,
@@ -320,7 +325,6 @@ HTML;
             $country = $DB->get_record('paygw_payuindia_countries', ['iso3' => $response->country]);
             $countryname = $country->name;
 
-            //TODO: Add payment information here.
             $event = user_payment_accepted::create(
                 array(
                     'objectid' => $response->id, // The id of the table paygw_payuindia_response
@@ -361,7 +365,7 @@ HTML;
 
         } else {
             // Throw an error. Something happened.
-            throw new moodle_exception(__LINE__, __FILE__, null, "Something went wrong with order delivery.");
+            throw new \moodle_exception(__LINE__, __FILE__, null, "Something went wrong with order delivery.");
         }
     }
 
@@ -593,16 +597,35 @@ HTML;
      * relogs in the user without need for additional authentication.
      */
     public static function relogin_user(\context $context) {
-        global $DB;
+        global $DB, $USER, $_REQUEST;
 
-        // TODO: Make sure that we aren't logged in as guest user.
-        if (isloggedin()) {
+        // USER->id == 1 is the guest user. We don't want guest user access.
+        if ($USER->id != 1 && isloggedin()) {
             return; // If we are logged in as someone, then no need to re-log in.
         }
 
         $txnid = required_param('txnid', PARAM_RAW);
+        $hash  = required_param('hash', PARAM_RAW);
+
+        // Just to make sure that this is a legitimate redirect,
+        // we will check the hash at this point to make sure that it's a valid
+        // request.
+
+
+
+
         $rec = $DB->get_record('paygw_payuindia', ['txnid' => $txnid]);
         $userid = $rec->userid;
+        $gwcfg = self::get_gatewayconfig($txnid);
+
+        // Before we relogin user, we will do the reverse hash here to see if
+        // the request was legitimate. If not, then throw an exception.
+        $rhash = self::generate_reverse_hash($gwcfg, $_REQUEST);
+
+        // Check that revese hash and hash match.
+        if ($rhash != $_REQUEST['hash']) {
+            throw new \moodle_exception(__LINE__, null, null, "Unauthorized access.");
+        }
 
         // This is the session manager logging in. But we do not
         // want to generate any login event, in case that triggers something
