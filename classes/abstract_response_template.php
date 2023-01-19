@@ -218,6 +218,7 @@ abstract class abstract_response_template {
                 $this->submitinfo['id'],
                 $this->submitinfo['txnid'],
                 $this->submitinfo['amount'],
+                $this->fetched_params['mihpayid'], // Gets other detailed information about the payment.
                 $this->submitinfo['additional_charges']); // We want additional_charges null here for input if not used.
         } catch (Exception $e) {
             $excep = $e;

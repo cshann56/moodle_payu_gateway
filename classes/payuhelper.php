@@ -27,9 +27,11 @@ namespace paygw_payuindia;
 
 defined('MOODLE_INTERNAL') || die();
 
-use core_payment\helper;
-use core\session\manager;
-use paygw_payuindia\gatewayconfig;
+use \context_course;
+use \core_payment\helper;
+use \core\session\manager;
+use \paygw_payuindia\gatewayconfig;
+use \paygw_payuindia\event\user_payment_accepted;
 
 require_once(__DIR__ . '/../../../../config.php');
 require_once($CFG->dirroot . '/course/lib.php');
@@ -281,7 +283,7 @@ HTML;
     }
 
     public static function deliver_order($component, $paymentarea, $itemid, $submitinfoid,
-                                        $txnid, $amount, $additional_charges = null) {
+                                        $txnid, $amount, $mihpayid, $additional_charges = null) {
         global $DB;
 
         // Get record for initial transaction.
@@ -295,12 +297,87 @@ HTML;
             $additional_charges != null ? $additional_charges : 0.0);
         $paymentid = helper::save_payment($payable->get_account_id(), $component, $paymentarea,
             $itemid, $userid, $cost, $payable->get_currency(), 'payuindia');
-        helper::deliver_order($component, $paymentarea, $itemid, $paymentid, $userid);
+        $result = helper::deliver_order($component, $paymentarea, $itemid, $paymentid, $userid);
 
-        // Update the default record with the id of the submitinfo and the paymentid.
-        $record->submitinfoid = $submitinfoid;
-        $record->paymentid = $paymentid;
-        $DB->update_record('paygw_payuindia', $record);
+        if ($result == true) { // order successfully delivered. It should always work if we got this point.
+
+            // Update the default record with the id of the submitinfo and the paymentid.
+            $record->submitinfoid = $submitinfoid;
+            $record->paymentid = $paymentid;
+            $DB->update_record('paygw_payuindia', $record);
+
+            // Initiate a PayU payment event
+            $enrol_rec = $DB->get_record('enrol', ['enrol' => $paymentarea, 'id' => $itemid]);
+            $context   = context_course::instance($enrol_rec->courseid, MUST_EXIST);
+            
+            // Get the course info.
+            $course = $DB->get_record('course', ['id' => $enrol_rec->courseid]); 
+
+            // Get the person's response info.
+            $response = $DB->get_record('paygw_payuindia_response', ['mihpayid' => $mihpayid]);
+
+            // Get the actual country name
+            $country = $DB->get_record('paygw_payuindia_countries', ['iso3' => $response->country]);
+            $countryname = $country->name;
+
+            //TODO: Add payment information here.
+            $event = user_payment_accepted::create(
+                array(
+                    'objectid' => $response->id, // The id of the table paygw_payuindia_response
+                    'courseid' => $enrol_rec->courseid,
+                    'contextid' => $context->id,
+                    'relateduserid' => $record->userid,
+                    'other' => array(
+                        'accountid' => $payable->get_account_id(), // Linked to account and account linked to gateway
+                        'paymentid' => $paymentid, // Just in case we need it.
+                        'course_fullname'   => $course->fullname,
+                        'course_shortname'  => $course->shortname,
+                        'course_idnumber'   => $course->idnumber,
+                        'course_startdate'  => $course->startdate,
+                        'course_enddate'    => $course->enddate,
+                        'txnid'     => $txnid, // Transaction ID shared with PayU
+                        'firstname' => $response->firstname,
+                        'lastname'  => $response->lastname,
+                        'address1'  => $response->address1,
+                        'address2'  => $response->address2,
+                        'city'      => $response->city,
+                        'state'     => $response->state,
+                        'country'   => $countryname,
+                        'zipcode'   => $response->zipcode,
+                        'email'     => $response->email,
+                        'amount'    => $response->amount,
+                        'additional_charges'    => $response->additional_charges,
+                        'payumode'  => $response->payumode,
+                        'status'    => $response->status,
+                        'productinfo'   => $response->productinfo,
+                        'bankcode'  => $response->bankcode,
+                        'paymentsource' => $response->paymentsource,
+                        'pg_type'   => $response->pg_type
+                        )
+                    )
+                );
+
+            $event->trigger();
+
+        } else {
+            // Throw an error. Something happened.
+            throw new moodle_exception(__LINE__, __FILE__, null, "Something went wrong with order delivery.");
+        }
+    }
+
+    /** Lifted from \paygw\helper */
+    private static function get_service_provider_classname(string $component) {
+        
+        $providerclass = "$component\\payment\\service_provider";
+
+        if (class_exists($providerclass)) {
+            $rc = new \ReflectionClass($providerclass);
+            if ($rc->implementsInterface(local\callback\service_provider::class)) {
+                return $providerclass;
+            }
+        }
+
+        throw new \coding_exception("$component does not have an eligible implementation of payment service_provider.");
     }
 
     /**
